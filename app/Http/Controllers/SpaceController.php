@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
+use Collective\Html\Eloquent\FormAccessible;
+
 class SpaceController extends Controller
 {
     public function __construct()
@@ -27,7 +29,7 @@ class SpaceController extends Controller
      */
     public function create()
     {
-        //
+        return view('pages.space.create');
     }
 
     /**
