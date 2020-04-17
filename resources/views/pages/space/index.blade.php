@@ -18,15 +18,15 @@
                     <div class="card-body">
                         <h5 class="card-title">{{ $space->title }}</h5>
                       @if ($space->user_id == Auth::user()->id)
-                      <form action="#">
+                      <form action="{{ route('space.destroy', $space->id) }}" method="post">
                         @csrf @method('DELETE')
-                        <button type="submit" class="btn btn-sm btn-danger float-right">Delete</button>
+                        <button type="submit" class="btn btn-sm btn-danger float-right" onclick="return confirm('are you sure ?');">Delete</button>
                         <a href="{{ route('space.edit',$space->id) }}" class="btn btn-sm btn-info float-right text-white">Edit</a>
                     </form>
                       @endif
                         <h6 class="card-subtitle">{{ $space->address }}</h6>
                         <p class="card-text">{{ $space->description }}</p>
-                        <a href="#" class="card-link">Direction</a>
+                        <a href="#" onclick="openDirection({{ $space->latitude }}, {{ $space->longitude }}, {{ $space->id }})" class="card-link">Direction</a>
                     </div>
                    </div>
                @endforeach

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
+use Illuminate\Support\Facades\Storage;
+
 use App\Space;
 
 use Collective\Html\Eloquent\FormAccessible;
@@ -48,16 +50,30 @@ class SpaceController extends Controller
     public function store(Request $request)
     {
         $this->validate($request, [
-            'title' => ['required','min:3'],
-            'address' => ['required','min:5'],
-            'description' => ['required','min:10'],
+            'title' => ['required', 'min:3'],
+            'address' => ['required', 'min:5'],
+            'description' => ['required', 'min:10'],
             'latitude' => ['required'],
             'longitude' => ['required'],
+            'photo' => ['required'],
+            'photo.*' => ['mimes:jpg,png,jpeg,ico']
         ]);
 
-        $request->user()->spaces()->create($request->all());
+        $space = $request->user()->spaces()->create($request->except('photo'));
 
-        return redirect()->route('space.index')->with('success','Sukses');
+        $spacePhotos = [];
+
+        foreach ($request->file('photo') as $file) {
+            $path = Storage::disk('public')->putFile('spaces', $file);
+            $spacePhotos[] = [
+                'space_id' => $space->id,
+                'path' => $path
+            ];
+        }
+
+        $space->photos()->insert($spacePhotos);
+
+        return redirect()->route('space.index')->with('status', 'Space created!');
     }
 
     /**
@@ -66,9 +82,10 @@ class SpaceController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        //
+        $space = Space::findOrFail($id);
+        return view('pages.space.show',compact('space'));
     }
 
     /**
@@ -121,6 +138,17 @@ class SpaceController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $space = Space::findOrFail($id);
+        if ($space->user_id != request()->user()->id) {
+            return redirect()->back();
+        }
+
+        foreach ($space->photos as $photo) {
+            Storage::delete('public/'.$photo->path);
+        }
+
+
+        $space->delete();
+        return redirect()->route('space.index')->with('status','Space Deleted');
     }
 }
